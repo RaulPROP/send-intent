@@ -4,10 +4,9 @@ import MobileCoreServices
 
 class ShareViewController: SLComposeServiceViewController {
 
-    private var urlString: String?
+    private var uriString: String?
     private var textString: String?
-    private var imageString: String?
-    private var fileString: String?
+    private var typeString: String?
 
     override func isContentValid() -> Bool {
         // Do validation of contentText and/or NSExtensionContext attachments here
@@ -17,11 +16,10 @@ class ShareViewController: SLComposeServiceViewController {
 
     override func didSelectPost() {
         var urlString = "SendIntentExample://?text=" + (self.textString ?? "");
-        urlString = urlString + "&url=" + (self.urlString ?? "");
-        urlString = urlString + "&image=" + (self.imageString ?? "");
-        urlString = urlString + "&file=" + (self.fileString?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? "");
+        urlString = urlString + "&type=" + (self.typeString ?? "");
+        urlString = urlString + "&uri=" + (self.uriString ?? "");
         let url = URL(string: urlString)!
-        openURL(url)
+        let _ = openURL(url)
         self.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
     }
 
@@ -31,36 +29,31 @@ class ShareViewController: SLComposeServiceViewController {
     }
 
     override func viewDidLoad() {
-      super.viewDidLoad()
+        super.viewDidLoad()
 
-      let extensionItem = extensionContext?.inputItems[0] as! NSExtensionItem
-      let contentTypeURL = kUTTypeURL as String
-      let contentTypeText = kUTTypeText as String
-
-      for attachment in extensionItem.attachments as! [NSItemProvider] {
-
-          attachment.loadItem(forTypeIdentifier: contentTypeURL, options: nil, completionHandler: { (results, error) in
-                if results != nil {
-                let url = results as! URL?
-                if url!.isFileURL {
-                    do {
-                        self.fileString = try! String(contentsOf: url!, encoding: .utf8)
-                    }
-                } else {
-                    self.urlString = url!.absoluteString
+        let attachments = (self.extensionContext?.inputItems.first as? NSExtensionItem)?.attachments ?? []
+        let contentType = kUTTypeData as String
+        
+        self.typeString = contentType
+        
+        for provider in attachments {
+            // Check if the content type is the same as we expected
+            if provider.hasItemConformingToTypeIdentifier(contentType) {
+                provider.loadItem(forTypeIdentifier: contentType,
+                                options: nil) { [unowned self] (data, error) in
+                // Handle the error here if you want
+                guard error == nil else { return }
+                   
+                    let url = data as! URL?
+                    self.uriString = url?.absoluteString ?? ""
+                    
+                    let text = data as! String?
+                    self.textString = text ?? ""
                 }
+                
             }
-          })
+        }
 
-          attachment.loadItem(forTypeIdentifier: contentTypeText, options: nil, completionHandler: { (results, error) in
-            if results != nil {
-                let text = results as! String
-                self.textString = text
-                _ = self.isContentValid()
-            }
-          })
-
-      }
     }
 
     @objc func openURL(_ url: URL) -> Bool {

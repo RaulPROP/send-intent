@@ -14,8 +14,8 @@ public class SendIntent: CAPPlugin {
         if !store.processed {
             call.resolve([
                 "type": store.type,
-                "uri": store.uri,
                 "text": store.text,
+                "uri": store.uri,
             ])
             store.processed = true
         }

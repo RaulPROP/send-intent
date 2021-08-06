@@ -9,10 +9,10 @@ const Home: React.FC = () => {
 
     function checkIntent() {
         SendIntent.checkSendIntentReceived().then((result: any) => (async function (result: any) {
-            alert(result.url)
-            alert(result.text)
-            alert(result.image)
-        })(result)).catch((err:any) => console.log(err))
+            alert(JSON.stringify(result, null, 4));
+        })(result)).catch((error:any) => {
+          alert(JSON.stringify({error}, null, 4));
+        })
     }
 
     window.addEventListener("sendIntentReceived", () => {
