@@ -52,10 +52,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 return false
         }
 
-        store.text = params.first(where: { $0.name == "text" })?.value as! String
-        store.url = params.first(where: { $0.name == "url" })?.value as! String
-        store.image = params.first(where: { $0.name == "image" })?.value as! String
-        store.file = params.first(where: { $0.name == "file" })?.value?.removingPercentEncoding as! String
+        store.text = params.first(where: { $0.name == "text" })?.value! ?? ""
+        store.uri = params.first(where: { $0.name == "uri" })?.value! ?? ""
+        store.type = params.first(where: { $0.name == "type" })?.value! ?? ""
         store.processed = false
 
         let nc = NotificationCenter.default

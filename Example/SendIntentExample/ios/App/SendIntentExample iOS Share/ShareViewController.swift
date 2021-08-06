@@ -10,16 +10,15 @@ class ShareViewController: SLComposeServiceViewController {
 
     override func isContentValid() -> Bool {
         // Do validation of contentText and/or NSExtensionContext attachments here
-        print(contentText ?? "content is empty")
         return true
     }
 
     override func didSelectPost() {
         var urlString = "SendIntentExample://?text=" + (self.textString ?? "");
-        urlString = urlString + "&type=" + (self.typeString ?? "");
         urlString = urlString + "&uri=" + (self.uriString ?? "");
+        urlString = urlString + "&type=" + (self.typeString ?? "");
         let url = URL(string: urlString)!
-        let _ = openURL(url)
+        _ = openURL(url)
         self.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
     }
 
@@ -30,29 +29,20 @@ class ShareViewController: SLComposeServiceViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        print(self.extensionContext?.inputItems as Any)
 
         let attachments = (self.extensionContext?.inputItems.first as? NSExtensionItem)?.attachments ?? []
-        let contentType = kUTTypeData as String
         
-        self.typeString = contentType
-        
-        for provider in attachments {
-            // Check if the content type is the same as we expected
-            if provider.hasItemConformingToTypeIdentifier(contentType) {
-                provider.loadItem(forTypeIdentifier: contentType,
-                                options: nil) { [unowned self] (data, error) in
-                // Handle the error here if you want
-                guard error == nil else { return }
-                   
-                    let url = data as! URL?
-                    self.uriString = url?.absoluteString ?? ""
-                    
-                    let text = data as! String?
-                    self.textString = text ?? ""
-                }
-                
-            }
+        for attachment in attachments {
+            
+            attachment.loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil, completionHandler: self.urlDataHandler)
+            
+            attachment.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil, completionHandler:self.textDataHandler)
+            
         }
+        
+        Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.didSelectPost), userInfo: nil, repeats: false)
 
     }
 
@@ -65,6 +55,54 @@ class ShareViewController: SLComposeServiceViewController {
             responder = responder?.next
         }
         return false
+    }
+    
+    func urlDataHandler(_ item: NSSecureCoding?, _ error: Error?) -> Void {
+        if (item != nil) {
+            self.handleUrlData(item as? NSURL)
+        }
+    }
+    
+    func textDataHandler(_ item: NSSecureCoding?, _ error: Error?) -> Void {
+        if (item != nil) {
+            self.handleTextData(item as? NSString)
+            self.handleUrlData(item as? NSURL)
+        }
+    }
+    
+    func handleUrlData(_ url: NSURL?) -> Void {
+        if (url != nil) {
+            print("handling url data", url as Any)
+            if url?.isFileURL ?? false {
+                do {
+                    self.uriString = url?.absoluteString ?? ""
+                    self.typeString = self.getMimeType(url)
+                    print(self.typeString as Any)
+                }
+            } else {
+                self.textString = url?.absoluteString ?? ""
+            }
+        }
+    }
+    
+    func handleTextData(_ text: NSString?) -> Void {
+        if (text != nil) {
+            print("handling text data", text as Any)
+            self.textString = text as String? ?? ""
+        }
+    }
+    
+    func getMimeType(_ url: NSURL?) -> String {
+        if (url == nil) {
+            return ""
+        }
+        let pathExtension = url?.pathExtension
+        if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension! as NSString, nil)?.takeRetainedValue() {
+            if let mimetype = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType)?.takeRetainedValue() {
+                return mimetype as String
+            }
+        }
+        return "application/octet-stream"
     }
 
 }

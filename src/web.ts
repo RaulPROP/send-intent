@@ -1,5 +1,5 @@
 import { WebPlugin } from '@capacitor/core';
-import { SendIntentPlugin } from './definitions';
+import { Intent, SendIntentPlugin } from './definitions';
 
 export class SendIntentWeb extends WebPlugin implements SendIntentPlugin {
   constructor() {
@@ -9,8 +9,8 @@ export class SendIntentWeb extends WebPlugin implements SendIntentPlugin {
     });
   }
 
-  async checkSendIntentReceived(): Promise<{text: string}> {
-    return {text: null};
+  async checkSendIntentReceived(): Promise<Intent> {
+    return {};
   }
 
 }

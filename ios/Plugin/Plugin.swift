@@ -13,9 +13,9 @@ public class SendIntent: CAPPlugin {
     @objc func checkSendIntentReceived(_ call: CAPPluginCall) {
         if !store.processed {
             call.resolve([
-                "type": store.type,
                 "text": store.text,
                 "uri": store.uri,
+                "type": store.type,
             ])
             store.processed = true
         }

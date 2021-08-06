@@ -10,8 +10,8 @@ public final class ShareStore {
         self.processed = false
     }
 
+    public var type: String;
     public var text: String;
     public var uri: String;
-    public var type: String;
     public var processed: Bool;
 }
