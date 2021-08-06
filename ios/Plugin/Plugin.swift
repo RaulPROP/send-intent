@@ -13,14 +13,11 @@ public class SendIntent: CAPPlugin {
     @objc func checkSendIntentReceived(_ call: CAPPluginCall) {
         if !store.processed {
             call.resolve([
+                "type": store.type,
+                "uri": store.uri,
                 "text": store.text,
-                "url": store.url,
-                "image": store.image,
-                "file": store.file
             ])
             store.processed = true
-        } else {
-            call.reject("No processing needed.")
         }
     }
 
